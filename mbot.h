@@ -23,7 +23,7 @@
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
-#define K 4.0
+#define K 2.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
 #define FRONT_US_SENSOR_PORT 3
@@ -58,6 +58,7 @@ public:
 	void _loop();
 	void takeDistanceMeasurements();
 	void storeMearurements();
+	double getDistance(int dir);
 private:
 	double angle_rad = PI/180.0;
 	double angle_deg = 180.0/PI;
@@ -111,6 +112,34 @@ void mbot::_delay(float seconds)
 	while(millis() < endTime)_loop();
 }
 
+double mbot::getDistance(int dir)
+{
+	double distance = 0.0;
+	double delta = 0.0;
+	int i;
+
+	// Try to throw away any outliars
+	for (i = 0; i < 10; i++) {
+		switch(dir) {
+		case RIGHT:
+			distance = mbotUltrasonic->rightDistanceCM();
+			delta = abs(distance - prevLeftDistance);
+			break;
+		case LEFT:
+			distance = mbotUltrasonic->leftDistanceCM();
+			delta = abs(distance - prevRightDistance);
+			break;
+		case FRONT:
+			distance = mbotUltrasonic->frontDistanceCM();
+			delta = abs(distance - prevFrontDistance);
+			break;
+		} // switch
+
+		if (delta <= K)
+			break;
+	} // for
+}
+
 void mbot::takeDistanceMeasurements()
 {
 	frontDistance = mbotUltrasonic->frontDistanceCM();
@@ -149,9 +178,8 @@ int mbot::findWall()
 	int wall = NOWALL;
 
 	leftDistance = mbotUltrasonic->leftDistanceCM();
-	if (leftDistance <= (2*WALLDISTANCE)) {
+	if (leftDistance <= (K*WALLDISTANCE)) {
 		mbotLed->setColor(2, 150, 0, 0);
-		//_delay(0.4);
 		mbotLed->setColor(2, 0, 0, 0);
 		wall =  LEFT;
 	}
@@ -159,23 +187,17 @@ int mbot::findWall()
 	frontDistance = mbotUltrasonic->frontDistanceCM();
 	if (frontDistance <= WALLDISTANCE) {
 		mbotLed->setColor(1, 0, 150, 0);
-		//_delay(0.4);
 		mbotLed->setColor(1, 0, 0, 0);
 		wall = FRONT;
 	}
 
 	rightDistance = mbotUltrasonic->rightDistanceCM();
-	if (rightDistance <= (2*WALLDISTANCE)) {
+	if (rightDistance <= (K*WALLDISTANCE)) {
 		mbotLed->setColor(4, 150, 0, 0);
-		//_delay(0.4);
 		mbotLed->setColor(4, 0, 0, 0);
 		wall =  RIGHT;
 	}
 
-
-	mbotLed->setColor(1, 0, 0, 200);
-	//_delay(0.4);
-	mbotLed->setColor(1, 0, 0, 200);
 	return wall;
 }
 
@@ -383,7 +405,6 @@ int mbot::do_turn(int speed, int dir)
 	 */
 	rightWheelSpeed = speed;
 	leftWheelSpeed = speed;
-	//mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 
 	mbotLed->setColor(4, 0, 0, 0);
 	mbotLed->setColor(2, 0, 0, 0);
@@ -462,8 +483,7 @@ int mbot::followWall(int wall)
 			break;
 		case LEFT: // Follow along left wall
 			mbotLed->setColor(2, 0, 200, 0);
-			leftDistance = mbotUltrasonic->leftDistanceCM();
-			distance = leftDistance;
+			distance = getDistance(LEFT);
 			derivitive = distance - prevLeftDistance;
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is positive, too close to wall
@@ -486,8 +506,7 @@ int mbot::followWall(int wall)
 			break;
 		case RIGHT: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
-			rightDistance = mbotUltrasonic->rightDistanceCM();
-			distance = rightDistance;
+			distance = getDistance(RIGHT);
 			derivitive = distance - prevRightDistance;
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is positive, too close to wall
