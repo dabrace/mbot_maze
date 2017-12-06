@@ -542,21 +542,17 @@ int mbot::moveAlongWall()
 
 	wall = findWall();
 
-	//if (wall == NOWALL)
-		//wall = do_turn(speed, currentWall);
-
-	currentWall = wall;
-
 	Serial.println("Test");
 	switch(wall) {
 		case FRONT:
-			wall = do_180(wall);
+			wall = do_180(currentWall);
 			break;
 		case RIGHT:
-			followRightWall();
-			break;
 		case LEFT:
-			followLeftWall();
+			followWall(wall);
+			break;
+		case NOWALL:
+			//wall = do_turn(speed, currentWall);
 			break;
 		default:
 			//followWall(NOWALL);
@@ -564,6 +560,7 @@ int mbot::moveAlongWall()
 	}
 
 	// Store previous measurements
+	currentWall = wall;
 	storeMearurements();
 }
 #endif // __MBOT_H_
