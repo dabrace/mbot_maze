@@ -47,13 +47,10 @@ public:
 	void mbotTurn(int degrees, int dir);
 	void move(int direction, int speed);
 	int moveAlongWall();
-	int followRightWall();
-	int followLeftWall();
 	int do_180(int dir);
 	int do_turn(int speed, int dir);
 	float normalizeDelta(int delta);
 	int findWall();
-	int isWallInFront();
 	void _delay(float seconds);
 	void _loop();
 	void takeDistanceMeasurements();
@@ -152,20 +149,6 @@ void mbot::storeMearurements()
 	prevLeftDistance = leftDistance;
 	prevRightDistance = rightDistance;
 	prevFrontDistance = frontDistance;
-}
-
-int mbot::isWallInFront()
-{
-	double front;
-
-	front = getDistance(FRONT);
-	if (front < WALLDISTANCE) {
-		mbotLed->setColor(1, 0, 200, 0);
-		//_delay(0.4);
-		mbotLed->setColor(1, 0, 0, 0);
-		return 1;
-	}
-	return 0;
 }
 
 /*
@@ -442,16 +425,6 @@ int mbot::do_turn(int speed, int dir)
  *========================================================================
  */
 
-int mbot::followRightWall()
-{
-	followWall(RIGHT);
-}
-
-int mbot::followLeftWall()
-{
-	followWall(LEFT);
-}
-
 // Calculate the delta based on the buffer zone and current distance
 // and multiply times a constant value K to smooth out the jitter.
 // Delta will be negative if the distance is larger than ideal dist.
@@ -485,12 +458,12 @@ int mbot::followWall(int wall)
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is positive, too close to wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
-					delta = delta * K;
+					delta = delta + K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
 			} else if (delta > 0) { // delta is negative, too farr from wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
-					delta = delta * K;
+					delta = delta + K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
 			} else {
@@ -508,12 +481,12 @@ int mbot::followWall(int wall)
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is positive, too close to wall
 				if (derivitive < prevRightDerivitive) // Still heading towards wall
-					delta = delta * K;
+					delta = delta + K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
 			} else if (delta > 0) { // delta is negative, too far from wall.
 				if (derivitive > prevRightDerivitive) // Still heading away from wall
-					delta = delta * K;
+					delta = delta + K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
 			} else {
