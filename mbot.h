@@ -49,7 +49,7 @@ public:
 	int moveAlongWall();
 	int followRightWall();
 	int followLeftWall();
-	int do_180(int speed, int dir);
+	int do_180(int dir);
 	int do_turn(int speed, int dir);
 	float normalizeDelta(int delta);
 	int findWall();
@@ -158,9 +158,9 @@ int mbot::isWallInFront()
 {
 	double front;
 
-	front = mbotUltrasonic->frontDistanceCM();
+	front = getDistance(FRONT);
 	if (front < WALLDISTANCE) {
-		mbotLed->setColor(1, 0, 150, 0);
+		mbotLed->setColor(1, 0, 200, 0);
 		//_delay(0.4);
 		mbotLed->setColor(1, 0, 0, 0);
 		return 1;
@@ -177,25 +177,25 @@ int mbot::findWall()
 {
 	int wall = NOWALL;
 
-	leftDistance = mbotUltrasonic->leftDistanceCM();
-	if (leftDistance <= (K*WALLDISTANCE)) {
-		mbotLed->setColor(2, 150, 0, 0);
+	leftDistance = getDistance(LEFT);
+	if (leftDistance <= (K+WALLDISTANCE)) {
+		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
-		wall =  LEFT;
+		return LEFT;
 	}
 
-	frontDistance = mbotUltrasonic->frontDistanceCM();
+	frontDistance = getDistance(FRONT);
 	if (frontDistance <= WALLDISTANCE) {
-		mbotLed->setColor(1, 0, 150, 0);
+		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
-		wall = FRONT;
+		return FRONT;
 	}
 
-	rightDistance = mbotUltrasonic->rightDistanceCM();
-	if (rightDistance <= (K*WALLDISTANCE)) {
-		mbotLed->setColor(4, 150, 0, 0);
+	rightDistance = getDistance(RIGHT);
+	if (rightDistance <= (K+WALLDISTANCE)) {
+		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
-		wall =  RIGHT;
+		return RIGHT;
 	}
 
 	return wall;
@@ -247,7 +247,7 @@ void mbot::move(int direction, int speed)
 	mbotMotor->motor_run(leftSpeed, rightSpeed);
 }
 
-int mbot::do_180(int speed, int dir)
+int mbot::do_180(int dir)
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 	int wall;
@@ -278,8 +278,8 @@ int mbot::do_180(int speed, int dir)
 		break;
 	}
 
-	mbotLed->setColor(1, 0, 0, 150);
-	mbotLed->setColor(3, 0, 0, 150);
+	mbotLed->setColor(1, 0, 0, 200);
+	mbotLed->setColor(3, 0, 0, 200);
 
 	mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 	// Keep at it until we are at a set distance from the wall.
@@ -293,7 +293,7 @@ int mbot::do_180(int speed, int dir)
 	//mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 
 	return wall;
-}
+} // do_180
 
 /*
  *========================================================================
@@ -342,8 +342,8 @@ int mbot::do_turn(int speed, int dir)
 
 	MeUltrasonicSensor *mbot_ultrasonic;
 
-	mbotLed->setColor(4, 0, 0, 150);
-	mbotLed->setColor(2, 0, 0, 150);
+	mbotLed->setColor(4, 0, 0, 200);
+	mbotLed->setColor(2, 0, 0, 200);
 
 	/*
 	 * Do not know how far the mbot has traveled
@@ -365,7 +365,7 @@ int mbot::do_turn(int speed, int dir)
 		leftWheelSpeed = speed/4;
 		wall = LEFT;
 		mbotLed->setColor(4, 0, 0, 0);
-		mbotLed->setColor(2, 150, 0, 0);
+		mbotLed->setColor(2, 200, 0, 0);
 		break;
 	/*
 	 * Wall was on the right, turn right
@@ -375,7 +375,7 @@ int mbot::do_turn(int speed, int dir)
 		rightWheelSpeed = speed/4;
 		leftWheelSpeed = speed;
 		wall = RIGHT;
-		mbotLed->setColor(4, 150, 0, 0);
+		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		break;
 	default:
@@ -383,8 +383,8 @@ int mbot::do_turn(int speed, int dir)
 		rightWheelSpeed = speed/4;
 		leftWheelSpeed = speed;
 		wall = RIGHT;
-		mbotLed->setColor(4, 0, 150, 0);
-		mbotLed->setColor(2, 0, 150, 0);
+		mbotLed->setColor(4, 0, 200, 0);
+		mbotLed->setColor(2, 0, 200, 0);
 		break;
 	}
 
@@ -392,8 +392,8 @@ int mbot::do_turn(int speed, int dir)
 	 * The idea is to keep turning until the sensor reads the proper
 	 * distance from the wall.
 	 */
-	mbotLed->setColor(1, 0, 0, 150);
-	mbotLed->setColor(3, 0, 0, 150);
+	mbotLed->setColor(1, 0, 0, 200);
+	mbotLed->setColor(3, 0, 0, 200);
 	mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 	// Keep at it until we are at a set distance from the wall.
 	while (mbot_ultrasonic->distanceCm() > WALLDISTANCE);
@@ -410,7 +410,7 @@ int mbot::do_turn(int speed, int dir)
 	mbotLed->setColor(2, 0, 0, 0);
 
 	return wall;
-}
+} // do_turn
 
 /*
  *========================================================================
@@ -477,9 +477,6 @@ int mbot::followWall(int wall)
 	 */
 	switch (wall) {
 		case FRONT:
-			rightWheelSpeed = 0;
-			leftWheelSpeed = 0;
-			distance = 0;
 			break;
 		case LEFT: // Follow along left wall
 			mbotLed->setColor(2, 0, 200, 0);
@@ -543,22 +540,17 @@ int mbot::moveAlongWall()
 	int wall;
 	int frontWall;
 
-	// Get all measurements
-	//takeDistanceMeasurements();
-
 	wall = findWall();
 
-	if (isWallInFront())
-		wall = do_180(speed, wall);
-
-	if (wall == NOWALL)
-		wall = do_turn(speed, currentWall);
+	//if (wall == NOWALL)
+		//wall = do_turn(speed, currentWall);
 
 	currentWall = wall;
 
 	Serial.println("Test");
 	switch(wall) {
 		case FRONT:
+			wall = do_180(wall);
 			break;
 		case RIGHT:
 			followRightWall();
@@ -567,7 +559,7 @@ int mbot::moveAlongWall()
 			followLeftWall();
 			break;
 		default:
-			followWall(NOWALL);
+			//followWall(NOWALL);
 			break;
 	}
 
