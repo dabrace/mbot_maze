@@ -447,6 +447,30 @@ int mbot::followWall(int wall)
 	 * If delta is negative, then we are too far away from the wall.
 	 *
 	 * Use the first derivitive to determine if we have not corrected enough.
+	 *
+	 *      +--------------------+ case too far from the wall
+	 *     W|                    |
+	 *     a|      +---+         |
+	 *     l|      |   |<------->| distance
+	 *     l|      +---+<->|<--->| WALLDISTANCE
+	 *      |            d |     |
+	 *      |            e |     |
+	 *      |            l |     |
+	 *      |            t |     |
+	 *      |            a |     |
+	 *
+	 *      +--------------------+ case too close to the wall
+	 *     W|                    |
+	 *     a|            +---+   |
+	 *     l|            |   |<->| distance
+	 *     l|            +---+   |
+	 *      |              |<>   | delta
+	 *      |              |<--->| WALLDISTANCE
+	 *      |              |     |
+	 *      |              |     |
+	 *      |              |     |
+	 *      |              |     |
+	 *      |              |     |
 	 */
 	switch (wall) {
 		case FRONT:
@@ -456,12 +480,12 @@ int mbot::followWall(int wall)
 			distance = getDistance(LEFT);
 			derivitive = distance - prevLeftDistance;
 			delta = WALLDISTANCE - distance;
-			if (delta < 0) { // delta is positive, too close to wall
+			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
 					delta = delta + K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
-			} else if (delta > 0) { // delta is negative, too farr from wall
+			} else if (delta > 0) { // delta is positive, too close to wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
 					delta = delta + K;
 				rightWheelSpeed = speed - delta;
@@ -479,12 +503,12 @@ int mbot::followWall(int wall)
 			distance = getDistance(RIGHT);
 			derivitive = distance - prevRightDistance;
 			delta = WALLDISTANCE - distance;
-			if (delta < 0) { // delta is positive, too close to wall
+			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevRightDerivitive) // Still heading towards wall
 					delta = delta + K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
-			} else if (delta > 0) { // delta is negative, too far from wall.
+			} else if (delta > 0) { // delta is positive, too close to the wall.
 				if (derivitive > prevRightDerivitive) // Still heading away from wall
 					delta = delta + K;
 				rightWheelSpeed = speed + delta;
