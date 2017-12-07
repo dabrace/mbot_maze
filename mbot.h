@@ -23,7 +23,7 @@
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
-#define K 5.0
+#define K 3.0
 #define TURN_TOLERANCE 2.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
@@ -45,11 +45,10 @@
 class mbot {
 public:
 	mbot();
-	void mbotTurn(int degrees, int dir);
 	void move(int direction, int speed);
 	int moveAlongWall();
-	void do_180(int dir);
-	void do_turn(int speed, int dir);
+	void do_180(int currWall);
+	void do_turn(int currWall);
 	float normalizeDelta(int delta);
 	void findWall();
 	void _delay(float seconds);
@@ -195,12 +194,6 @@ void mbot::findWall()
 	wall = NOWALL;
 }
 
-void mbot::mbotTurn(int degrees,int dir)
-{
-	switch (dir) {
-	}
-}
-
 // Avoid large deltas
 float mbot::normalizeDelta(int delta)
 {
@@ -241,11 +234,11 @@ void mbot::move(int direction, int speed)
 	mbotMotor->motor_run(leftSpeed, rightSpeed);
 }
 
-void mbot::do_180(int dir)
+void mbot::do_180(int currWall)
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
-	switch (dir) {
+	switch (currWall) {
 	/*
 	 * Wall is on the left, do 180 right
 	 */
@@ -264,6 +257,9 @@ void mbot::do_180(int dir)
 		leftWheelSpeed = -speed;
 		wall = LEFT;
 		break;
+	/*
+	 * Something is hosed
+	 */
 	default:
 		rightWheelSpeed = 0;
 		leftWheelSpeed = 0;
@@ -329,7 +325,7 @@ void mbot::do_180(int dir)
  *
  *========================================================================
  */
-void mbot::do_turn(int speed, int dir)
+void mbot::do_turn(int currWall)
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
@@ -346,7 +342,7 @@ void mbot::do_turn(int speed, int dir)
 	mbotLed->setColor(4, 0, 0, 0);
 	mbotLed->setColor(2, 0, 0, 0);
 
-	switch (dir) {
+	switch (currWall) {
 	/*
 	 * Wall was on the left, turn left
 	 */
@@ -553,10 +549,10 @@ int mbot::moveAlongWall()
 			followWall();
 			break;
 		case NOWALL:
-			do_turn(speed, currentWall);
+			do_turn(currentWall);
 			break;
 		default:
-			//followWall(NOWALL);
+			followWall(NOWALL);
 			break;
 	}
 
