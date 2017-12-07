@@ -1,6 +1,7 @@
 #if !defined(__MBOT_H_)
 #define __MBOT_H_
 
+#include "MeBluetooth.h"
 #include "motor.h"
 #include "ultrasonic.h"
 #include "led.h"
@@ -36,9 +37,9 @@
 
 #define LEDPORT 4
 
-#define FRONT 0
-#define RIGHT 1
-#define LEFT 2
+#define FRONTWALL 0
+#define RIGHTWALL 1
+#define LEFTWALL 2
 
 #define NOWALL -1
 
@@ -124,13 +125,13 @@ double mbot::getDistance(int dir)
 	// Try to throw away any outliars
 	for (i = 0; i < NUM_READINGS; i++) {
 		switch(dir) {
-		case RIGHT:
+		case RIGHTWALL:
 			distance[i] = mbotUltrasonic->rightDistanceCM();
 			break;
-		case LEFT:
+		case LEFTWALL:
 			distance[i] = mbotUltrasonic->leftDistanceCM();
 			break;
-		case FRONT:
+		case FRONTWALL:
 			distance[i] = mbotUltrasonic->frontDistanceCM();
 			break;
 		} // switch
@@ -168,27 +169,27 @@ void mbot::storeMearurements()
  */
 void mbot::findWall()
 {
-	leftDistance = getDistance(LEFT);
+	leftDistance = getDistance(LEFTWALL);
 	if (leftDistance <= (WALLDISTANCE + K)) {
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
-		wall = LEFT;
+		wall = LEFTWALL;
 		return;
 	}
 
-	rightDistance = getDistance(RIGHT);
+	rightDistance = getDistance(RIGHTWALL);
 	if (rightDistance <= (WALLDISTANCE + K)) {
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
-		wall = RIGHT;
+		wall = RIGHTWALL;
 		return;
 	}
 
-	frontDistance = getDistance(FRONT);
+	frontDistance = getDistance(FRONTWALL);
 	if (frontDistance <= WALLDISTANCE) {
 		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
-		wall = FRONT;
+		wall = FRONTWALL;
 		return;
 	}
 
@@ -243,20 +244,20 @@ void mbot::do_180()
 	/*
 	 * Wall is on the left, do 180 right
 	 */
-	case LEFT:
+	case LEFTWALL:
 		mbot_ultrasonic = mbotUltrasonic->getRightP();
 		rightWheelSpeed = -speed;
 		leftWheelSpeed = speed;
-		wall = RIGHT;
+		wall = RIGHTWALL;
 		break;
 	/*
 	 * Wall is on the right, do 180 left
 	 */
-	case RIGHT:
+	case RIGHTWALL:
 		mbot_ultrasonic = mbotUltrasonic->getLeftP();
 		rightWheelSpeed = speed;
 		leftWheelSpeed = -speed;
-		wall = LEFT;
+		wall = LEFTWALL;
 		break;
 	/*
 	 * Something is hosed
@@ -347,22 +348,22 @@ void mbot::do_turn()
 	/*
 	 * Wall was on the left, turn left
 	 */
-	case LEFT:
+	case LEFTWALL:
 		mbot_ultrasonic = mbotUltrasonic->getLeftP();
 		rightWheelSpeed = speed;
 		leftWheelSpeed = speed/4;
-		wall = LEFT;
+		wall = LEFTWALL;
 		mbotLed->setColor(4, 0, 0, 0);
 		mbotLed->setColor(2, 200, 0, 0);
 		break;
 	/*
 	 * Wall was on the right, turn right
 	 */
-	case RIGHT:
+	case RIGHTWALL:
 		mbot_ultrasonic = mbotUltrasonic->getRightP();
 		rightWheelSpeed = speed/4;
 		leftWheelSpeed = speed;
-		wall = RIGHT;
+		wall = RIGHTWALL;
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		break;
@@ -477,11 +478,11 @@ void mbot::followWall()
 	 *      |              |     |
 	 */
 	switch (wall) {
-		case FRONT:
+		case FRONTWALL:
 			break;
-		case LEFT: // Follow along left wall
+		case LEFTWALL: // Follow along left wall
 			mbotLed->setColor(2, 0, 200, 0);
-			distance = getDistance(LEFT);
+			distance = getDistance(LEFTWALL);
 			derivitive = distance - prevLeftDistance;
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
@@ -502,9 +503,9 @@ void mbot::followWall()
 			prevLeftDerivitive = derivitive;
 			mbotLed->setColor(2, 0, 0, 0);
 			break;
-		case RIGHT: // Follow along right wall
+		case RIGHTWALL: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
-			distance = getDistance(RIGHT);
+			distance = getDistance(RIGHTWALL);
 			derivitive = distance - prevRightDistance;
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
@@ -542,11 +543,11 @@ int mbot::moveAlongWall()
 
 	Serial.println("Test");
 	switch(wall) {
-		case FRONT:
+		case FRONTWALL:
 			do_180();
 			break;
-		case RIGHT:
-		case LEFT:
+		case RIGHTWALL:
+		case LEFTWALL:
 			followWall();
 			break;
 		case NOWALL:
