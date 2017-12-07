@@ -47,15 +47,6 @@ public:
 	mbot();
 	void move(int direction, int speed);
 	int moveAlongWall();
-	void do_180(int currWall);
-	void do_turn(int currWall);
-	float normalizeDelta(int delta);
-	void findWall();
-	void _delay(float seconds);
-	void _loop();
-	void takeDistanceMeasurements();
-	void storeMearurements();
-	double getDistance(int dir);
 private:
 	double angle_rad = PI/180.0;
 	double angle_deg = 180.0/PI;
@@ -74,6 +65,15 @@ private:
 	double prevRightDerivitive;
 	double frontDistance;
 	double prevFrontDistance;
+	float normalizeDelta(int delta);
+	void do_180();
+	void do_turn();
+	void _delay(float seconds);
+	void _loop();
+	double getDistance(int dir);
+	void takeDistanceMeasurements();
+	void storeMearurements();
+	void findWall();
 	void followWall();
 	int currentWall;
 	int wall;
@@ -91,7 +91,7 @@ mbot::mbot()
 	leftWheelSpeed = MOTORSPEED;
 	rightWheelSpeed = MOTORSPEED;
 
-	currentWall = RIGHT;
+	findWall();
 	takeDistanceMeasurements();
 	storeMearurements();
 	prevRightDerivitive = 0;
@@ -158,6 +158,7 @@ void mbot::storeMearurements()
 	prevLeftDistance = leftDistance;
 	prevRightDistance = rightDistance;
 	prevFrontDistance = frontDistance;
+	currentWall = wall;
 }
 
 /*
@@ -234,11 +235,11 @@ void mbot::move(int direction, int speed)
 	mbotMotor->motor_run(leftSpeed, rightSpeed);
 }
 
-void mbot::do_180(int currWall)
+void mbot::do_180()
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
-	switch (currWall) {
+	switch (currentWall) {
 	/*
 	 * Wall is on the left, do 180 right
 	 */
@@ -325,7 +326,7 @@ void mbot::do_180(int currWall)
  *
  *========================================================================
  */
-void mbot::do_turn(int currWall)
+void mbot::do_turn()
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
@@ -342,7 +343,7 @@ void mbot::do_turn(int currWall)
 	mbotLed->setColor(4, 0, 0, 0);
 	mbotLed->setColor(2, 0, 0, 0);
 
-	switch (currWall) {
+	switch (currentWall) {
 	/*
 	 * Wall was on the left, turn left
 	 */
@@ -542,14 +543,14 @@ int mbot::moveAlongWall()
 	Serial.println("Test");
 	switch(wall) {
 		case FRONT:
-			do_180(currentWall);
+			do_180();
 			break;
 		case RIGHT:
 		case LEFT:
 			followWall();
 			break;
 		case NOWALL:
-			do_turn(currentWall);
+			do_turn();
 			break;
 		default:
 			followWall();
@@ -557,7 +558,6 @@ int mbot::moveAlongWall()
 	}
 
 	// Store previous measurements
-	currentWall = wall;
 	storeMearurements();
 }
 #endif // __MBOT_H_
