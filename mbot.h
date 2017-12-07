@@ -552,7 +552,7 @@ int mbot::moveAlongWall()
 			do_turn(currentWall);
 			break;
 		default:
-			followWall(NOWALL);
+			followWall();
 			break;
 	}
 
