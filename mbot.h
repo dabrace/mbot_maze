@@ -19,11 +19,12 @@
 			to get the behavior you like.
 */
 
-#define WALLDISTANCE 10.58 // 1" = 2.54 CM // Not sure if it is really in CM.
+#define WALLDISTANCE 8.58 // 1" = 2.54 CM // Not sure if it is really in CM.
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
-#define K 2.0
+#define K 5.0
+#define TURN_TOLERANCE 2.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
 #define FRONT_US_SENSOR_PORT 3
@@ -109,32 +110,40 @@ void mbot::_delay(float seconds)
 	while(millis() < endTime)_loop();
 }
 
+#define NUM_READINGS 10
 double mbot::getDistance(int dir)
 {
-	double distance = 0.0;
-	double delta = 0.0;
+	double distance[NUM_READINGS] = 0.0;
+	double total = 0.0;
+	int count = 0;
 	int i;
 
+	for (i = 0; i < NUM_READINGS; i++)
+		distance[i] = 0.0;
+
 	// Try to throw away any outliars
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < NUM_READINGS; i++) {
 		switch(dir) {
 		case RIGHT:
-			distance = mbotUltrasonic->rightDistanceCM();
-			delta = abs(distance - prevLeftDistance);
+			distance[i] = mbotUltrasonic->rightDistanceCM();
 			break;
 		case LEFT:
-			distance = mbotUltrasonic->leftDistanceCM();
-			delta = abs(distance - prevRightDistance);
+			distance[i] = mbotUltrasonic->leftDistanceCM();
 			break;
 		case FRONT:
-			distance = mbotUltrasonic->frontDistanceCM();
-			delta = abs(distance - prevFrontDistance);
+			distance[i] = mbotUltrasonic->frontDistanceCM();
 			break;
 		} // switch
-
-		if (delta <= K)
-			break;
 	} // for
+
+	for (i = 1; i < NUM_READINGS; i++) {
+		if ((abs(distance[i] - distance[i-1])) > K)
+			continue;
+		total += distance[i];
+		++count;
+	}
+
+	return total/count;
 }
 
 void mbot::takeDistanceMeasurements()
@@ -161,10 +170,17 @@ int mbot::findWall()
 	int wall = NOWALL;
 
 	leftDistance = getDistance(LEFT);
-	if (leftDistance <= (K+WALLDISTANCE)) {
+	if (leftDistance <= (WALLDISTANCE + K)) {
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		return LEFT;
+	}
+
+	rightDistance = getDistance(RIGHT);
+	if (rightDistance <= (WALLDISTANCE + K)) {
+		mbotLed->setColor(4, 200, 0, 0);
+		mbotLed->setColor(4, 0, 0, 0);
+		return RIGHT;
 	}
 
 	frontDistance = getDistance(FRONT);
@@ -172,13 +188,6 @@ int mbot::findWall()
 		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
 		return FRONT;
-	}
-
-	rightDistance = getDistance(RIGHT);
-	if (rightDistance <= (K+WALLDISTANCE)) {
-		mbotLed->setColor(4, 200, 0, 0);
-		mbotLed->setColor(4, 0, 0, 0);
-		return RIGHT;
 	}
 
 	return wall;
