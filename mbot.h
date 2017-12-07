@@ -48,10 +48,10 @@ public:
 	void mbotTurn(int degrees, int dir);
 	void move(int direction, int speed);
 	int moveAlongWall();
-	int do_180(int dir);
-	int do_turn(int speed, int dir);
+	void do_180(int dir);
+	void do_turn(int speed, int dir);
 	float normalizeDelta(int delta);
-	int findWall();
+	void findWall();
 	void _delay(float seconds);
 	void _loop();
 	void takeDistanceMeasurements();
@@ -75,8 +75,9 @@ private:
 	double prevRightDerivitive;
 	double frontDistance;
 	double prevFrontDistance;
-	int followWall(int wall);
+	void followWall();
 	int currentWall;
+	int wall;
 };
 
 mbot::mbot()
@@ -113,7 +114,7 @@ void mbot::_delay(float seconds)
 #define NUM_READINGS 10
 double mbot::getDistance(int dir)
 {
-	double distance[NUM_READINGS] = 0.0;
+	double distance[NUM_READINGS] = { 0.0 };
 	double total = 0.0;
 	int count = 0;
 	int i;
@@ -137,7 +138,7 @@ double mbot::getDistance(int dir)
 	} // for
 
 	for (i = 1; i < NUM_READINGS; i++) {
-		if ((abs(distance[i] - distance[i-1])) > K)
+		if (((abs(distance[i] - distance[i-1])) > K) || (distance[i] <= 0))
 			continue;
 		total += distance[i];
 		++count;
@@ -165,32 +166,33 @@ void mbot::storeMearurements()
  *
  * Takes all distance measurements
  */
-int mbot::findWall()
+void mbot::findWall()
 {
-	int wall = NOWALL;
-
 	leftDistance = getDistance(LEFT);
 	if (leftDistance <= (WALLDISTANCE + K)) {
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
-		return LEFT;
+		wall = LEFT;
+		return;
 	}
 
 	rightDistance = getDistance(RIGHT);
 	if (rightDistance <= (WALLDISTANCE + K)) {
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
-		return RIGHT;
+		wall = RIGHT;
+		return;
 	}
 
 	frontDistance = getDistance(FRONT);
 	if (frontDistance <= WALLDISTANCE) {
 		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
-		return FRONT;
+		wall = FRONT;
+		return;
 	}
 
-	return wall;
+	wall = NOWALL;
 }
 
 void mbot::mbotTurn(int degrees,int dir)
@@ -239,10 +241,9 @@ void mbot::move(int direction, int speed)
 	mbotMotor->motor_run(leftSpeed, rightSpeed);
 }
 
-int mbot::do_180(int dir)
+void mbot::do_180(int dir)
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
-	int wall;
 
 	switch (dir) {
 	/*
@@ -284,7 +285,7 @@ int mbot::do_180(int dir)
 	leftWheelSpeed = speed;
 	//mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 
-	return wall;
+	return;
 } // do_180
 
 /*
@@ -328,10 +329,8 @@ int mbot::do_180(int dir)
  *
  *========================================================================
  */
-int mbot::do_turn(int speed, int dir)
+void mbot::do_turn(int speed, int dir)
 {
-	int wall = NOWALL;
-
 	MeUltrasonicSensor *mbot_ultrasonic;
 
 	mbotLed->setColor(4, 0, 0, 200);
@@ -371,10 +370,9 @@ int mbot::do_turn(int speed, int dir)
 		mbotLed->setColor(2, 0, 0, 0);
 		break;
 	default:
-		mbot_ultrasonic = mbotUltrasonic->getRightP();
-		rightWheelSpeed = speed/4;
-		leftWheelSpeed = speed;
-		wall = RIGHT;
+		rightWheelSpeed = 0;
+		leftWheelSpeed = 0;
+		wall = NOWALL;
 		mbotLed->setColor(4, 0, 200, 0);
 		mbotLed->setColor(2, 0, 200, 0);
 		break;
@@ -401,12 +399,12 @@ int mbot::do_turn(int speed, int dir)
 	mbotLed->setColor(4, 0, 0, 0);
 	mbotLed->setColor(2, 0, 0, 0);
 
-	return wall;
+	return;
 } // do_turn
 
 /*
  *========================================================================
- * Follow wall to the right
+ * Follow wall
  *
  * Algorithm:
  *            1. Measure distance to wall using right Ultrasonic sensor
@@ -442,7 +440,7 @@ int mbot::do_turn(int speed, int dir)
 // 	2. speed up the left wheel speed.
 // Avoid too high of a speed delta.
 // Helps prevent spinnig in circles when distances are large
-int mbot::followWall(int wall)
+void mbot::followWall()
 {
 	double distance;
 	double delta;
@@ -539,26 +537,23 @@ int mbot::followWall(int wall)
 	}
 
 	mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
-}
+} // followWall
 
 int mbot::moveAlongWall()
 {
-	int wall;
-	int frontWall;
-
-	wall = findWall();
+	findWall();
 
 	Serial.println("Test");
 	switch(wall) {
 		case FRONT:
-			wall = do_180(currentWall);
+			do_180(currentWall);
 			break;
 		case RIGHT:
 		case LEFT:
-			followWall(wall);
+			followWall();
 			break;
 		case NOWALL:
-			//wall = do_turn(speed, currentWall);
+			do_turn(speed, currentWall);
 			break;
 		default:
 			//followWall(NOWALL);
