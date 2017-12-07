@@ -45,7 +45,6 @@
 class mbot {
 public:
 	mbot();
-	void move(int direction, int speed);
 	int moveAlongWall();
 private:
 	double angle_rad = PI/180.0;
@@ -66,6 +65,7 @@ private:
 	double frontDistance;
 	double prevFrontDistance;
 	float normalizeDelta(int delta);
+	void move(int direction, int speed);
 	void do_180();
 	void do_turn();
 	void _delay(float seconds);
