@@ -32,8 +32,6 @@ void motor::motor_run(int leftSpeed, int rightSpeed)
 {
 	left->run((motorPortLeft)==M1?-(leftSpeed):(leftSpeed));
 	right->run((motorPortRight)==M1?-(rightSpeed):(rightSpeed));
-	//left->run(leftSpeed);
-	//right->run(rightSpeed);
 }
 
 #endif // __MOTOR_H
