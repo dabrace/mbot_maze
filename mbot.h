@@ -111,6 +111,9 @@ void mbot::_delay(float seconds)
 	while(millis() < endTime)_loop();
 }
 
+/*
+ * Take a few samples
+ */
 #define NUM_READINGS 10
 double mbot::getDistance(int dir)
 {
@@ -166,11 +169,12 @@ void mbot::storeMearurements()
  * find a wall nearest to the mbot.
  *
  * Takes all distance measurements
+ * Need to allow for robot drifting.
  */
 void mbot::findWall()
 {
 	leftDistance = getDistance(LEFTWALL);
-	if (leftDistance <= (WALLDISTANCE + K)) {
+	if (leftDistance <= (WALLDISTANCE + 2*K)) {
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		wall = LEFTWALL;
@@ -178,7 +182,7 @@ void mbot::findWall()
 	}
 
 	rightDistance = getDistance(RIGHTWALL);
-	if (rightDistance <= (WALLDISTANCE + K)) {
+	if (rightDistance <= (WALLDISTANCE + 2*K)) {
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
 		wall = RIGHTWALL;
@@ -193,6 +197,9 @@ void mbot::findWall()
 		return;
 	}
 
+	/*
+	 * Will need to turn to keep following a wall.
+	 */
 	wall = NOWALL;
 }
 
@@ -543,18 +550,18 @@ int mbot::moveAlongWall()
 
 	Serial.println("Test");
 	switch(wall) {
-		case FRONTWALL:
+		case FRONTWALL: /* for now it's a barrier, not obsticle.*/
 			do_180();
 			break;
 		case RIGHTWALL:
 		case LEFTWALL:
-			followWall();
+			followWall(); /* Keep following the wall. */
 			break;
 		case NOWALL:
-			do_turn();
+			do_turn(); /* We are at a corner */
 			break;
 		default:
-			followWall();
+			followWall(); /* FIXME */
 			break;
 	}
 
