@@ -119,12 +119,14 @@ double mbot::getDistance(int dir)
 {
 	double distance[NUM_READINGS] = { 0.0 };
 	double total = 0.0;
+	double tolerance = 0.0;
 	int count = 0;
 	int i;
 
 	for (i = 0; i < NUM_READINGS; i++)
 		distance[i] = 0.0;
 
+	tolerance = TURN_TOLERANCE * 2;
 	// Try to throw away any outliars
 	for (i = 0; i < NUM_READINGS; i++) {
 		switch(dir) {
@@ -135,13 +137,15 @@ double mbot::getDistance(int dir)
 			distance[i] = mbotUltrasonic->leftDistanceCM();
 			break;
 		case FRONTWALL:
+			tolerance = 1;
 			distance[i] = mbotUltrasonic->frontDistanceCM();
 			break;
 		} // switch
 	} // for
 
 	for (i = 1; i < NUM_READINGS; i++) {
-		if (((abs(distance[i] - distance[i-1])) > K) || (distance[i] <= 0))
+		if (((abs(distance[i] - distance[i-1])) > tolerance) ||
+			(distance[i] <= 0))
 			continue;
 		total += distance[i];
 		++count;
