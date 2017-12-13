@@ -174,6 +174,11 @@ void mbot::storeMearurements()
  *
  * Takes all distance measurements
  * Need to allow for robot drifting.
+ *
+ * LED Sensors
+ *      1F
+ *   4R    2L
+ *      3
  */
 void mbot::findWall()
 {
@@ -342,8 +347,8 @@ void mbot::do_turn()
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
-	mbotLed->setColor(4, 0, 0, 200);
-	mbotLed->setColor(2, 0, 0, 200);
+	mbotLed->setColor(4, 0, 200, 0);
+	mbotLed->setColor(2, 0, 200, 0);
 
 	/*
 	 * Do not know how far the mbot has traveled
@@ -391,8 +396,8 @@ void mbot::do_turn()
 	 * The idea is to keep turning until the sensor reads the proper
 	 * distance from the wall.
 	 */
-	mbotLed->setColor(1, 0, 0, 200);
-	mbotLed->setColor(3, 0, 0, 200);
+	mbotLed->setColor(1, 0, 200, 0);
+	mbotLed->setColor(3, 0, 200, 0);
 	mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 	// Keep at it until we are at a set distance from the wall.
 	while (mbot_ultrasonic->distanceCm() > WALLDISTANCE);
@@ -451,9 +456,9 @@ void mbot::do_turn()
 // Helps prevent spinnig in circles when distances are large
 void mbot::followWall()
 {
-	double distance;
-	double delta;
-	double derivitive;
+	double distance = 0.0;
+	double delta = 0.0;
+	double derivitive = 0.0;
 
 	/*
 	 * Assign right and left wheel speeds.
@@ -558,6 +563,8 @@ int mbot::moveAlongWall()
 			do_180();
 			break;
 		case RIGHTWALL:
+			followWall(); /* Keep following the wall. */
+			break;
 		case LEFTWALL:
 			followWall(); /* Keep following the wall. */
 			break;
