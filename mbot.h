@@ -20,12 +20,12 @@
 			to get the behavior you like.
 */
 
-#define WALLDISTANCE 8.58 // 1" = 2.54 CM // Not sure if it is really in CM.
+#define WALLDISTANCE 38.58 // 1" = 2.54 CM // Not sure if it is really in CM.
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
 #define K 3.0
-#define TURN_TOLERANCE 2.0
+#define TURN_TOLERANCE 12.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
 #define FRONT_US_SENSOR_PORT 3
@@ -37,11 +37,11 @@
 
 #define LEDPORT 4
 
-#define FRONTWALL 0
-#define RIGHTWALL 1
-#define LEFTWALL 2
+#define FRONTWALL 100
+#define RIGHTWALL 200
+#define LEFTWALL 300
 
-#define NOWALL -1
+#define NOWALL 10
 
 class mbot {
 public:
@@ -152,7 +152,7 @@ double mbot::getDistance(int dir)
 	}
 
 	return total/count;
-}
+} // getDistance
 
 void mbot::takeDistanceMeasurements()
 {
@@ -182,6 +182,11 @@ void mbot::storeMearurements()
  */
 void mbot::findWall()
 {
+	/*
+	 * Will need to turn to keep following a wall.
+	 */
+	wall = NOWALL;
+
 	leftDistance = getDistance(LEFTWALL);
 	if (leftDistance <= (WALLDISTANCE + 2*K)) {
 		mbotLed->setColor(2, 200, 0, 0);
@@ -205,11 +210,6 @@ void mbot::findWall()
 		wall = FRONTWALL;
 		return;
 	}
-
-	/*
-	 * Will need to turn to keep following a wall.
-	 */
-	wall = NOWALL;
 }
 
 // Avoid large deltas
@@ -298,6 +298,8 @@ void mbot::do_180()
 	rightWheelSpeed = speed;
 	leftWheelSpeed = speed;
 	//mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
+
+	currentWall = wall;
 
 	return;
 } // do_180
@@ -503,12 +505,12 @@ void mbot::followWall()
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
-					delta = delta + K;
+					delta = delta + 2*K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
 			} else if (delta > 0) { // delta is positive, too close to wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
-					delta = delta + K;
+					delta = delta + 2*K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
 			} else {
@@ -526,12 +528,12 @@ void mbot::followWall()
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevRightDerivitive) // Still heading towards wall
-					delta = delta + K;
+					delta = delta + 2*K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
 			} else if (delta > 0) { // delta is positive, too close to the wall.
 				if (derivitive > prevRightDerivitive) // Still heading away from wall
-					delta = delta + K;
+					delta = delta + 2*K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
 			} else {
@@ -574,9 +576,9 @@ int mbot::moveAlongWall()
 		default:
 			followWall(); /* FIXME */
 			break;
-	}
+	} // switch
 
 	// Store previous measurements
 	storeMearurements();
-}
+} // moveAlongWall
 #endif // __MBOT_H_
