@@ -30,7 +30,7 @@ void setup()
 	// Use default speed
 	robot.move(1, -1);
 
-	Serial.begin(9600);
+	Serial.begin(115200);
 }
 
 void loop()

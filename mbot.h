@@ -7,6 +7,7 @@
 #include "led.h"
 
 /*
+DAB
 	Here's an alternative way to control the motors when following a wall:
 
 	1. Define the ideal follow distance D and the typical motor speed S.
@@ -92,13 +93,14 @@ mbot::mbot()
 	leftWheelSpeed = MOTORSPEED;
 	rightWheelSpeed = MOTORSPEED;
 
-	findWall();
-	takeDistanceMeasurements();
-	storeMearurements();
+	//findWall();
+	//takeDistanceMeasurements();
+	//storeMearurements();
 	prevRightDerivitive = 0;
 	prevLeftDerivitive = 0;
 
-	Serial.begin(9600);
+	Serial.begin(115200);
+	Serial.println("CONSTRUCTOR");
 }
 
 void mbot::_loop()
@@ -151,6 +153,9 @@ double mbot::getDistance(int dir)
 		++count;
 	}
 
+	Serial.print("Distance: ");
+	Serial.println(total/count);
+
 	return total/count;
 } // getDistance
 
@@ -192,6 +197,8 @@ void mbot::findWall()
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		wall = LEFTWALL;
+		Serial.print("LEFT: ");
+		Serial.println(leftDistance);
 		return;
 	}
 
@@ -200,6 +207,8 @@ void mbot::findWall()
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
 		wall = RIGHTWALL;
+		Serial.print("RIGHT: ");
+		Serial.println(rightDistance);
 		return;
 	}
 
@@ -208,6 +217,8 @@ void mbot::findWall()
 		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
 		wall = FRONTWALL;
+		Serial.print("FRONT: ");
+		Serial.println(frontDistance);
 		return;
 	}
 }
@@ -557,9 +568,10 @@ void mbot::followWall()
 
 int mbot::moveAlongWall()
 {
+	Serial.println("START");
+
 	findWall();
 
-	Serial.println("Test");
 	switch(wall) {
 		case FRONTWALL: /* for now it's a barrier, not obsticle.*/
 			do_180();
