@@ -21,12 +21,12 @@ DAB
 			to get the behavior you like.
 */
 
-#define WALLDISTANCE 38.58 // 1" = 2.54 CM // Not sure if it is really in CM.
+#define WALLDISTANCE 10.58 // 1" = 2.54 CM // Not sure if it is really in CM.
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
 #define K 3.0
-#define TURN_TOLERANCE 12.0
+#define TURN_TOLERANCE 2.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
 #define FRONT_US_SENSOR_PORT 3
@@ -94,12 +94,12 @@ mbot::mbot()
 	rightWheelSpeed = MOTORSPEED;
 
 	//findWall();
-	//takeDistanceMeasurements();
-	//storeMearurements();
+	takeDistanceMeasurements();
+	storeMearurements();
 	prevRightDerivitive = 0;
 	prevLeftDerivitive = 0;
 
-	Serial.begin(115200);
+	Serial.begin(230400);
 	Serial.println("CONSTRUCTOR");
 }
 
@@ -153,17 +153,20 @@ double mbot::getDistance(int dir)
 		++count;
 	}
 
-	Serial.print("Distance: ");
-	Serial.println(total/count);
+	//Serial.print("Distance: ");
+	//Serial.println(total/count);
 
 	return total/count;
 } // getDistance
 
 void mbot::takeDistanceMeasurements()
 {
-	frontDistance = mbotUltrasonic->frontDistanceCM();
-	leftDistance = mbotUltrasonic->leftDistanceCM();
-	rightDistance = mbotUltrasonic->rightDistanceCM();
+	//frontDistance = mbotUltrasonic->frontDistanceCM();
+	//leftDistance = mbotUltrasonic->leftDistanceCM();
+	//rightDistance = mbotUltrasonic->rightDistanceCM();
+	frontDistance = getDistance(FRONTWALL);
+	rightDistance = getDistance(RIGHTWALL);
+	leftDistance = getDistance(LEFTWALL);
 }
 
 void mbot::storeMearurements()
@@ -192,36 +195,38 @@ void mbot::findWall()
 	 */
 	wall = NOWALL;
 
-	leftDistance = getDistance(LEFTWALL);
-	if (leftDistance <= (WALLDISTANCE + 2*K)) {
-		mbotLed->setColor(2, 200, 0, 0);
-		mbotLed->setColor(2, 0, 0, 0);
-		wall = LEFTWALL;
-		Serial.print("LEFT: ");
-		Serial.println(leftDistance);
-		return;
-	}
-
-	rightDistance = getDistance(RIGHTWALL);
-	if (rightDistance <= (WALLDISTANCE + 2*K)) {
-		mbotLed->setColor(4, 200, 0, 0);
-		mbotLed->setColor(4, 0, 0, 0);
-		wall = RIGHTWALL;
-		Serial.print("RIGHT: ");
-		Serial.println(rightDistance);
-		return;
-	}
-
 	frontDistance = getDistance(FRONTWALL);
+	rightDistance = getDistance(RIGHTWALL);
+	leftDistance = getDistance(LEFTWALL);
+
 	if (frontDistance <= WALLDISTANCE) {
 		mbotLed->setColor(1, 200, 0, 0);
 		mbotLed->setColor(1, 0, 0, 0);
 		wall = FRONTWALL;
-		Serial.print("FRONT: ");
+		Serial.print("findWall FRONT: ");
 		Serial.println(frontDistance);
 		return;
+	} else if (rightDistance <= (WALLDISTANCE + 2*K)) {
+		mbotLed->setColor(4, 200, 0, 0);
+		mbotLed->setColor(4, 0, 0, 0);
+		wall = RIGHTWALL;
+		Serial.print("findWall RIGHT: ");
+		Serial.println(rightDistance);
+		return;
+	} else if (leftDistance <= (WALLDISTANCE + 2*K)) {
+		mbotLed->setColor(2, 200, 0, 0);
+		mbotLed->setColor(2, 0, 0, 0);
+		wall = LEFTWALL;
+		Serial.print("findWall LEFT: ");
+		Serial.println(leftDistance);
+		return;
+	} else {
+		wall = NOWALL;
+		Serial.print("findWall NOWALL: ");
+		Serial.println(0);
+		return;
 	}
-}
+} //findWall
 
 // Avoid large deltas
 float mbot::normalizeDelta(int delta)
@@ -267,7 +272,7 @@ void mbot::do_180()
 {
 	MeUltrasonicSensor *mbot_ultrasonic;
 
-	switch (currentWall) {
+	switch (wall) {
 	/*
 	 * Wall is on the left, do 180 right
 	 */
@@ -276,6 +281,7 @@ void mbot::do_180()
 		rightWheelSpeed = -speed;
 		leftWheelSpeed = speed;
 		wall = RIGHTWALL;
+		Serial.println("do_180: LEFT");
 		break;
 	/*
 	 * Wall is on the right, do 180 left
@@ -285,11 +291,13 @@ void mbot::do_180()
 		rightWheelSpeed = speed;
 		leftWheelSpeed = -speed;
 		wall = LEFTWALL;
+		Serial.println("do_180: RIGHT");
 		break;
 	/*
 	 * Something is hosed
 	 */
 	default:
+		Serial.println("do_180: NOWALL");
 		rightWheelSpeed = 0;
 		leftWheelSpeed = 0;
 		wall = NOWALL;
@@ -308,9 +316,7 @@ void mbot::do_180()
 
 	rightWheelSpeed = speed;
 	leftWheelSpeed = speed;
-	//mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
-
-	currentWall = wall;
+	mbotMotor->motor_run(leftWheelSpeed, rightWheelSpeed);
 
 	return;
 } // do_180
@@ -531,6 +537,7 @@ void mbot::followWall()
 			}
 			prevLeftDerivitive = derivitive;
 			mbotLed->setColor(2, 0, 0, 0);
+			Serial.println("followWall: LEFT");
 			break;
 		case RIGHTWALL: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
@@ -554,9 +561,19 @@ void mbot::followWall()
 			}
 			prevRightDerivitive = derivitive;
 			mbotLed->setColor(4, 0, 0, 0);
+			Serial.print("followWall: RIGHT:");
+			Serial.print(distance);
+			Serial.print(" delta: ");
+			Serial.print(delta);
+			Serial.print(" rws:");
+			Serial.print(rightWheelSpeed);
+			Serial.print(" lws:");
+			Serial.print(leftWheelSpeed);
+			Serial.println(".");
 			break;
 		case NOWALL:
 		default:
+			Serial.println("followWall: NOWALL");
 			distance = 0;
 			rightWheelSpeed = 0;
 			leftWheelSpeed = 0;
@@ -568,7 +585,7 @@ void mbot::followWall()
 
 int mbot::moveAlongWall()
 {
-	Serial.println("START");
+	//Serial.println("START");
 
 	findWall();
 
@@ -583,9 +600,10 @@ int mbot::moveAlongWall()
 			followWall(); /* Keep following the wall. */
 			break;
 		case NOWALL:
-			do_turn(); /* We are at a corner */
+			//do_turn(); /* We are at a corner */
 			break;
 		default:
+			Serial.println("moveAlongWall: default");
 			followWall(); /* FIXME */
 			break;
 	} // switch

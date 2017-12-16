@@ -26,11 +26,10 @@ void setup()
 		_delay(1.0);
 	}
 
+	Serial.begin(230400);
 	// Start the robot moving forward.
 	// Use default speed
 	robot.move(1, -1);
-
-	Serial.begin(115200);
 }
 
 void loop()
