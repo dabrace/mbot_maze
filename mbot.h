@@ -19,6 +19,13 @@ DAB
     		MotorRight.setSpeed ( S + k * e )
     			Where k  is a gain coefficient that you can tweak
 			to get the behavior you like.
+
+	Notes for sending serial data over bluetooth:
+		if ( Serial.available()) {
+			String serialResponse = Serial.readStringUntil(’\r\n’);
+			Serial.println("Read: " + serialResponse);
+		}
+
 */
 
 #define WALLDISTANCE 10.58 // 1" = 2.54 CM // Not sure if it is really in CM.
