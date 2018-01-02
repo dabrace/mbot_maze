@@ -494,10 +494,10 @@ void mbot::followWall()
 	 *     l|      |   |<------->| distance
 	 *     l|      +---+<->|<--->| WALLDISTANCE
 	 *      |            d |     |
-	 *      |            e |     |
-	 *      |            l |     |
-	 *      |            t |     |
-	 *      |            a |     |
+	 *      |            e |     | W
+	 *      |            l |     | a
+	 *      |            t |     | l
+	 *      |            a |     | l
 	 *
 	 *      +--------------------+ case too close to the wall
 	 *     W|                    |
@@ -507,10 +507,12 @@ void mbot::followWall()
 	 *      |              |<>   | delta
 	 *      |              |<--->| WALLDISTANCE
 	 *      |              |     |
-	 *      |              |     |
-	 *      |              |     |
-	 *      |              |     |
-	 *      |              |     |
+	 *      |              |     | W
+	 *      |              |     | a
+	 *      |              |     | l
+	 *      |              |     | l
+	 * RWS = Right Wheel Speed
+	 * LWS = Left Wheel Speed
 	 */
 	switch (wall) {
 		case FRONTWALL:
@@ -522,15 +524,15 @@ void mbot::followWall()
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
-					delta = delta + 2*K;
-				rightWheelSpeed = speed + delta;
-				leftWheelSpeed = speed - delta;
+					delta = delta * K; // Decrease RT, Increase LT
+				rightWheelSpeed = speed + delta; // delta is negative, RWS less
+				leftWheelSpeed = speed - delta;  // delta is negative, LWS more
 			} else if (delta > 0) { // delta is positive, too close to wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
-					delta = delta + 2*K;
-				rightWheelSpeed = speed - delta;
-				leftWheelSpeed = speed + delta;
-			} else {
+					delta = delta * K;
+				rightWheelSpeed = speed - delta; // delta is positive, Slow down RWS
+				leftWheelSpeed = speed + delta;  // Speed up LWS
+			} else { // We are exactly where we want to be
 				delta = 0;
 				rightWheelSpeed = speed;
 				leftWheelSpeed = speed;
@@ -545,13 +547,13 @@ void mbot::followWall()
 			derivitive = distance - prevRightDistance;
 			delta = WALLDISTANCE - distance;
 			if (delta < 0) { // delta is negative, too far from the wall
-				if (derivitive < prevRightDerivitive) // Still heading towards wall
-					delta = delta + 2*K;
+				if (derivitive < prevRightDerivitive) // Still heading away from wall
+					delta = delta * K;
 				rightWheelSpeed = speed - delta;
 				leftWheelSpeed = speed + delta;
 			} else if (delta > 0) { // delta is positive, too close to the wall.
 				if (derivitive > prevRightDerivitive) // Still heading away from wall
-					delta = delta + 2*K;
+					delta = delta * K;
 				rightWheelSpeed = speed + delta;
 				leftWheelSpeed = speed - delta;
 			} else {
