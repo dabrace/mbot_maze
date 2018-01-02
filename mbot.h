@@ -50,6 +50,7 @@ public:
 	void move(int direction, int speed);
 	int moveAlongWall();
 private:
+	MeBluetooth Bluetooth;
 	double angle_rad = PI/180.0;
 	double angle_deg = 180.0/PI;
 	motor *mbotMotor;
@@ -101,6 +102,10 @@ mbot::mbot()
 
 	Serial.begin(230400);
 	Serial.println("CONSTRUCTOR");
+
+        //bluetooth.begin(115200);    //The factory default baud rate is 115200
+        Bluetooth.begin(230400);    //The factory default baud rate is 115200
+
 }
 
 void mbot::_loop()

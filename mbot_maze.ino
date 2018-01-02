@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
+#include <MeBluetooth.h>
 #include "MeMCore.h"
 
 #include "mbot.h"
