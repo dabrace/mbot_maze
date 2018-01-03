@@ -33,7 +33,7 @@ DAB
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
 #define K 3.0
-#define TURN_TOLERANCE 2.0
+#define TURN_TOLERANCE 4.0
 
 // Need to look at mbot to see what RJ25 ports the sensors are plugged into
 #define FRONT_US_SENSOR_PORT 3
@@ -218,14 +218,14 @@ void mbot::findWall()
 		Serial.print("findWall FRONT: ");
 		Serial.println(frontDistance);
 		return;
-	} else if (rightDistance <= (WALLDISTANCE + 2*K)) {
+	} else if (rightDistance <= (WALLDISTANCE + 4*K)) {
 		mbotLed->setColor(4, 200, 0, 0);
 		mbotLed->setColor(4, 0, 0, 0);
 		wall = RIGHTWALL;
 		Serial.print("findWall RIGHT: ");
 		Serial.println(rightDistance);
 		return;
-	} else if (leftDistance <= (WALLDISTANCE + 2*K)) {
+	} else if (leftDistance <= (WALLDISTANCE + 4*K)) {
 		mbotLed->setColor(2, 200, 0, 0);
 		mbotLed->setColor(2, 0, 0, 0);
 		wall = LEFTWALL;
@@ -537,8 +537,8 @@ void mbot::followWall()
 			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
 					delta = delta * K; // Decrease RT, Increase LT
-				rightWheelSpeed = speed - delta; // delta is negative, RWS less
-				leftWheelSpeed = speed + delta;  // delta is negative, LWS more
+				rightWheelSpeed = speed - delta; // delta is negative, RWS more
+				leftWheelSpeed = speed + delta;  // delta is negative, LWS less
 			} else if (delta > 0) { // delta is positive, too close to wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
 					delta = delta * K;
@@ -607,8 +607,6 @@ void mbot::followWall()
 
 int mbot::moveAlongWall()
 {
-	//Serial.println("START");
-
 	findWall();
 
 	switch(wall) {
