@@ -28,8 +28,41 @@ motor::motor(int port_left, int port_right)
 	motorPortRight = port_right;
 }
 
+/*
+ * From the mbot.h mbot::mbot() constructor and MACRO defs.
+ * M1 == 9,  motorPortLeft  == 9
+ * M2 == 10, motorPortRight == 10
+ * So the mbot looks like this:
+ * 
+ *
+ *              +--------------------+                    L Motor       R Motor
+ *  A           |                    |        C           <------       ----->
+ *  n           |                    |        l           |     ^       ^    |
+ *  t           |                    |        o           |     |       |    |
+ *  i           |                    |        c           v----->       <----v
+ *              |                    |        k
+ *  C           | +---+        +---+ |        w
+ *  l           | | L |        | R | |        i
+ *  o     left  | | M |        | M | | right  s
+ *  c     ========| o |        | o |========  e
+ *  k     shaft | | t |        | t | | shaft
+ *  w           | | o |        | o | |
+ *  i           | | r |        | r | |
+ *  s           | +---+        +---+ |
+ *  e           |                    |
+ *              +--------------------+
+ *
+ * If both motors are turning the drive shafts clockwise, the robot would
+ * spin in an anti-clockwise circle. They must spin in opposite directions.
+ *
+ * So, one motor spins in one direction, while the other spins in the opposite
+ * direction.
+ */
 void motor::motor_run(int leftSpeed, int rightSpeed)
 {
+	// Spin left shaft opposite of right shaft
+	// M1 is the left motor port
+	// M2 is the right motor port
 	left->run((motorPortLeft)==M1?-(leftSpeed):(leftSpeed));
 	right->run((motorPortRight)==M1?-(rightSpeed):(rightSpeed));
 	Serial.print("motor_run: ");
