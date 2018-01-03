@@ -32,6 +32,20 @@ void motor::motor_run(int leftSpeed, int rightSpeed)
 {
 	left->run((motorPortLeft)==M1?-(leftSpeed):(leftSpeed));
 	right->run((motorPortRight)==M1?-(rightSpeed):(rightSpeed));
+	Serial.print("motor_run: ");
+	Serial.print("motorPortLeft: ");
+	Serial.print(motorPortLeft);
+	Serial.print(" motorPortRight: ");
+	Serial.print(motorPortRight);
+	Serial.print(" M1: ");
+	Serial.print(M1);
+	Serial.print(" M2: ");
+	Serial.print(M2);
+	Serial.print(" RWS: ");
+	Serial.print(rightSpeed);
+	Serial.print(" LWS: ");
+	Serial.print(leftSpeed);
+	Serial.println(".");
 }
 
 #endif // __MOTOR_H

@@ -28,7 +28,7 @@ DAB
 
 */
 
-#define WALLDISTANCE 10.58 // 1" = 2.54 CM // Not sure if it is really in CM.
+#define WALLDISTANCE 8.58 // 1" = 2.54 CM // Not sure if it is really in CM.
 #define MOTORSPEED 80.0
 #define SPEED_DELTA_MAX 15.0
 #define TURNDELAY 0.3  // Arbitrary guess based on max speed.
@@ -537,8 +537,8 @@ void mbot::followWall()
 			if (delta < 0) { // delta is negative, too far from the wall
 				if (derivitive < prevLeftDerivitive) // Still heading towards wall
 					delta = delta * K; // Decrease RT, Increase LT
-				rightWheelSpeed = speed + delta; // delta is negative, RWS less
-				leftWheelSpeed = speed - delta;  // delta is negative, LWS more
+				rightWheelSpeed = speed - delta; // delta is negative, RWS less
+				leftWheelSpeed = speed + delta;  // delta is negative, LWS more
 			} else if (delta > 0) { // delta is positive, too close to wall
 				if (derivitive > prevLeftDerivitive) // Still heading away from wall
 					delta = delta * K;
@@ -551,7 +551,15 @@ void mbot::followWall()
 			}
 			prevLeftDerivitive = derivitive;
 			mbotLed->setColor(2, 0, 0, 0);
-			Serial.println("followWall: LEFT");
+			Serial.print("followWall: LEFT");
+			Serial.print(distance);
+			Serial.print(" delta: ");
+			Serial.print(delta);
+			Serial.print(" rws:");
+			Serial.print(rightWheelSpeed);
+			Serial.print(" lws:");
+			Serial.print(leftWheelSpeed);
+			Serial.println(".");
 			break;
 		case RIGHTWALL: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
