@@ -459,10 +459,10 @@ void mbot::do_turn()
  *               circles.
  *
  *    |           +-----+           |
- *    |   +-+     |  S  |     +-+   |  
- *    |   |S| +-------------+ |S|<->| WALLDISTANCE 
- *    |   +-+ |             | +-+   |  
- *    |       |             |       |  
+ *  L |   +-+     |  S  |     +-+   |  
+ *  e |   |S| +-------------+ |S|<->| WALLDISTANCE 
+ *  f |   +-+ |             | +-+   |  
+ *  t |       |             |       |  
  *    |   +-+ |      m      | +-+   |
  *  W |   |t| |      B      | |t|   | W
  *  a |   |i| |      o      | |i|   | a
@@ -525,6 +525,26 @@ void mbot::followWall()
 	 *      |              |     | l
 	 * RWS = Right Wheel Speed
 	 * LWS = Left Wheel Speed
+	 *
+	 * Derivitives
+	 *      If instead of correcting back to the correct distance we are still heading
+	 *      farther/closer from/to the wall, we need to make the speed delta larger.
+	 *      Calculation:
+	 *         derivitive = current distance - previous distance
+	 *
+	 *      1. Still heading farther from the wall, derivitive is positive
+	 *          B|<------->W Desired wall distance
+	 *          o|<--------------->W Current wall distance
+	 *          t|<----------->W Previous wall distance
+	 *                         |<->| derivitive positive
+	 *                         |<>| previous derivitive positive
+	 *
+	 *      2. Still heading into the wall, derivitive is negative
+	 *          B|<------->W Desired wall distance
+	 *          o|<----->W Previous wall distance
+	 *          t|<->W Current wall distance
+	 *               |<->| derivitive negative
+	 *               |<-->| previous derivitive negative
 	 */
 	switch (wall) {
 		case FRONTWALL:
@@ -532,23 +552,21 @@ void mbot::followWall()
 		case LEFTWALL: // Follow along left wall
 			mbotLed->setColor(2, 0, 200, 0);
 			distance = getDistance(LEFTWALL);
-			derivitive = distance - prevLeftDistance;
+
 			delta = WALLDISTANCE - distance;
-			if (delta < 0) { // delta is negative, too far from the wall
-				if (derivitive < prevLeftDerivitive) // Still heading towards wall
-					delta = delta * K; // Decrease RT, Increase LT
-				rightWheelSpeed = speed - delta; // delta is negative, RWS more
-				leftWheelSpeed = speed + delta;  // delta is negative, LWS less
-			} else if (delta > 0) { // delta is positive, too close to wall
-				if (derivitive > prevLeftDerivitive) // Still heading away from wall
-					delta = delta * K;
-				rightWheelSpeed = speed - delta; // delta is positive, Slow down RWS
-				leftWheelSpeed = speed + delta;  // Speed up LWS
-			} else { // We are exactly where we want to be
-				delta = 0;
-				rightWheelSpeed = speed;
-				leftWheelSpeed = speed;
-			}
+			// Small wheel speed changes do not seem to help
+			// exagerate them. Also helps for debugging.
+			delta *= K;
+			derivitive = distance - prevLeftDistance;
+			if (derivitive < prevLeftDerivitive) // We have not corrected enough
+				delta = delta * K;
+
+			// The speed calculation is the same, it depends on delta being negative/positive
+			// If delta is negative, this will increase RWS, decrease LWS
+			// If delta is positive, this will decrease RWS, increase LWS
+			rightWheelSpeed = speed - delta; // delta is negative, RWS more, otherwise RWS less
+			leftWheelSpeed = speed + delta;  // delta is negative, LWS less, otherwise LWS more
+
 			prevLeftDerivitive = derivitive;
 			mbotLed->setColor(2, 0, 0, 0);
 			Serial.print("followWall: LEFT");
@@ -564,23 +582,18 @@ void mbot::followWall()
 		case RIGHTWALL: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
 			distance = getDistance(RIGHTWALL);
-			derivitive = distance - prevRightDistance;
+
 			delta = WALLDISTANCE - distance;
-			if (delta < 0) { // delta is negative, too far from the wall
-				if (derivitive < prevRightDerivitive) // Still heading away from wall
-					delta = delta * K;
-				rightWheelSpeed = speed - delta;
-				leftWheelSpeed = speed + delta;
-			} else if (delta > 0) { // delta is positive, too close to the wall.
-				if (derivitive > prevRightDerivitive) // Still heading away from wall
-					delta = delta * K;
-				rightWheelSpeed = speed - delta;
-				leftWheelSpeed = speed + delta;
-			} else {
-				delta = 0;
-				rightWheelSpeed = speed;
-				leftWheelSpeed = speed;
-			}
+			// Small wheel speed changes do not seem to help
+			// exagerate them. Also helps for debugging.
+			delta *= K;
+			derivitive = distance - prevRightDistance;
+			if (derivitive < prevRightDerivitive) // Increase correction
+				delta = delta * K;
+
+			rightWheelSpeed = speed + delta;
+			leftWheelSpeed = speed - delta;
+
 			prevRightDerivitive = derivitive;
 			mbotLed->setColor(4, 0, 0, 0);
 			Serial.print("followWall: RIGHT:");
