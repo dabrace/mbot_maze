@@ -177,8 +177,11 @@ void mbot::takeDistanceMeasurements()
 	//leftDistance = mbotUltrasonic->leftDistanceCM();
 	//rightDistance = mbotUltrasonic->rightDistanceCM();
 	frontDistance = getDistance(FRONTWALL);
+	_delay(500);
 	rightDistance = getDistance(RIGHTWALL);
+	_delay(500);
 	leftDistance = getDistance(LEFTWALL);
+	_delay(500);
 }
 
 void mbot::storeMearurements()
@@ -208,8 +211,11 @@ void mbot::findWall()
 	wall = NOWALL;
 
 	frontDistance = getDistance(FRONTWALL);
+	_delay(500);
 	rightDistance = getDistance(RIGHTWALL);
+	_delay(500);
 	leftDistance = getDistance(LEFTWALL);
+	_delay(500);
 
 	if (frontDistance <= WALLDISTANCE) {
 		mbotLed->setColor(1, 200, 0, 0);
@@ -552,6 +558,7 @@ void mbot::followWall()
 		case LEFTWALL: // Follow along left wall
 			mbotLed->setColor(2, 0, 200, 0);
 			distance = getDistance(LEFTWALL);
+			_delay(500);
 
 			delta = WALLDISTANCE - distance;
 			// Small wheel speed changes do not seem to help
@@ -582,6 +589,7 @@ void mbot::followWall()
 		case RIGHTWALL: // Follow along right wall
 			mbotLed->setColor(4, 0, 200, 0);
 			distance = getDistance(RIGHTWALL);
+			_delay(500);
 
 			delta = WALLDISTANCE - distance;
 			// Small wheel speed changes do not seem to help
