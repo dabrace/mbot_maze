@@ -46,7 +46,7 @@ MeUltrasonicSensor * ultrasonic::getRightP()
 
 double ultrasonic::frontDistanceCM()
 {
-	doulble d = front->distanceCm();
+	double d = front->distanceCm();
 	if (d < 2.0)
 		d = 2.0;
 	if (d > 400.0)
